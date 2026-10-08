@@ -1,0 +1,35 @@
+services:
+  orchestrator:
+    build: { context: ., dockerfile: docker/Dockerfile }
+    environment:
+      APP_MODULE: multi_agent.orchestrator.api:app
+      VERIFIER_AGENT_URL: http://verifier-agent:8000
+      RAG_AGENT_URL: http://rag-agent:8000
+    env_file: .env
+    ports: ["8000:8000"]
+    depends_on: [verifier-agent, rag-agent]
+
+  verifier-agent:
+    build: { context: ., dockerfile: docker/Dockerfile }
+    environment:
+      APP_MODULE: multi_agent.verifier.api:app
+    env_file: .env
+    ports: ["8001:8000"]
+
+  rag-agent:
+    build: { context: ., dockerfile: docker/Dockerfile }
+    environment:
+      APP_MODULE: multi_agent.rag.api:app
+      QDRANT_URL: http://qdrant:6333
+    env_file: .env
+    ports: ["8002:8000"]
+    volumes: ["./data:/app/data"]
+    depends_on: [qdrant]
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports: ["6333:6333"]
+    volumes: ["qdrant_data:/qdrant/storage"]
+
+volumes:
+  qdrant_data:
